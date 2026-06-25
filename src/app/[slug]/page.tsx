@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useRef, useCallback, type FormEvent } from "react"
 import { useParams } from "next/navigation"
+import { motion, AnimatePresence } from "framer-motion"
 
 interface ImageData {
   id: number
@@ -100,6 +101,7 @@ export default function SlugPage() {
         const newTokens = { ...deleteTokens }
         delete newTokens[img.id]
         setDeleteTokens(newTokens)
+        showToast("Deleted")
         await fetchImages()
       }
     } catch {
@@ -168,62 +170,86 @@ export default function SlugPage() {
 
   if (loading) {
     return (
-      <div className="flex-1 flex items-center justify-center text-neutral-500 text-sm">
-        Loading...
+      <div className="flex-1 flex items-center justify-center">
+        <div className="size-6 border-2 border-white/10 border-t-cyan-400 rounded-full animate-spin" />
       </div>
     )
   }
 
   return (
     <div className="flex-1 flex flex-col max-w-2xl mx-auto w-full">
-      <div className="sticky top-0 bg-neutral-950/80 backdrop-blur z-10 border-b border-neutral-800 px-4 py-3">
-        <h1 className="text-sm font-mono text-neutral-400">
-          /{slug} <span className="text-neutral-600">· {images.length} image{images.length !== 1 ? "s" : ""}</span>
-        </h1>
+      <div className="sticky top-0 z-10 bg-[#07070a]/80 backdrop-blur-xl border-b border-white/[0.06] px-4 py-3">
+        <div className="flex items-center justify-between">
+          <h1 className="text-sm font-medium text-white/60">
+            <span className="text-white/90">/{slug}</span>
+            <span className="text-white/20 ml-2">· {images.length} image{images.length !== 1 ? "s" : ""}</span>
+          </h1>
+        </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3">
+      <div className="flex-1 overflow-y-auto px-4 py-6 space-y-4">
         {images.length === 0 ? (
-          <div className="flex-1 flex items-center justify-center text-neutral-500 text-sm py-12">
-            No images yet. Paste one below!
-          </div>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="flex-1 flex items-center justify-center text-white/20 text-sm py-16"
+          >
+            No images yet. Paste or choose one below.
+          </motion.div>
         ) : (
-          images.map((img) => (
-            <div key={img.id} className="max-w-[280px]">
-              <div className="bg-neutral-900 border border-neutral-800 rounded-lg overflow-hidden">
-                <img
-                  src={img.imageUrl}
-                  alt=""
-                  className="w-full max-h-[220px] object-contain bg-neutral-950/50"
-                />
-              </div>
-              <div className="flex items-center gap-2 px-1 pt-1 text-[11px] text-neutral-500">
-                <span className="truncate">{formatTime(img.createdAt)}</span>
-                <span className="shrink-0">· Exp {formatExpiry(img.expiresAt)}</span>
-                <button
-                  onClick={() => handleCopyImage(img.imageUrl)}
-                  className="shrink-0 text-blue-400 hover:text-blue-300 ml-auto"
-                >
-                  Copy
-                </button>
-                {deleteTokens[img.id] && (
+          <AnimatePresence initial={false}>
+            {images.map((img) => (
+              <motion.div
+                key={img.id}
+                layout
+                initial={{ opacity: 0, y: 20, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95, transition: { duration: 0.2 } }}
+                transition={{ duration: 0.35, ease: [0.25, 0.1, 0.25, 1] }}
+                className="max-w-[300px]"
+              >
+                <div className="group relative">
+                  <div className="absolute -inset-px rounded-xl bg-gradient-to-br from-cyan-500/10 via-transparent to-violet-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                  <div className="relative bg-white/[0.03] border border-white/[0.06] rounded-xl overflow-hidden backdrop-blur-sm">
+                    <img
+                      src={img.imageUrl}
+                      alt=""
+                      className="w-full max-h-[240px] object-contain bg-black/20"
+                    />
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 px-1 pt-1.5 text-[11px] text-white/30">
+                  <span>{formatTime(img.createdAt)}</span>
+                  <span className="size-1 rounded-full bg-white/10" />
+                  <span>Exp {formatExpiry(img.expiresAt)}</span>
                   <button
-                    onClick={() => handleDelete(img)}
-                    className="shrink-0 text-red-400 hover:text-red-300"
+                    onClick={() => handleCopyImage(img.imageUrl)}
+                    className="ml-auto text-cyan-400/60 hover:text-cyan-300 transition-colors text-[10px] tracking-wider uppercase font-medium"
                   >
-                    Del
+                    Copy
                   </button>
-                )}
-              </div>
-            </div>
-          ))
+                  {deleteTokens[img.id] && (
+                    <button
+                      onClick={() => handleDelete(img)}
+                      className="text-red-400/60 hover:text-red-300 transition-colors text-[10px] tracking-wider uppercase font-medium"
+                    >
+                      Del
+                    </button>
+                  )}
+                </div>
+              </motion.div>
+            ))}
+          </AnimatePresence>
         )}
         <div ref={bottomRef} />
       </div>
 
-      <div className="sticky bottom-0 bg-neutral-950/80 backdrop-blur border-t border-neutral-800 p-2">
+      <div className="sticky bottom-0 bg-[#07070a]/80 backdrop-blur-xl border-t border-white/[0.06] p-3">
         {uploading ? (
-          <div className="text-center text-xs text-neutral-500 py-2">Uploading...</div>
+          <div className="flex items-center justify-center gap-2 text-xs text-white/30 py-1.5">
+            <div className="size-3.5 border-2 border-white/10 border-t-cyan-400 rounded-full animate-spin" />
+            Uploading...
+          </div>
         ) : (
           <div onPaste={handlePaste} className="flex items-center justify-center gap-2 text-xs">
             <input
@@ -235,25 +261,38 @@ export default function SlugPage() {
             />
             <button
               onClick={() => fileRef.current?.click()}
-              className="px-3 py-1.5 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-neutral-300 transition-colors"
+              className="group relative"
             >
-              Choose Image
+              <div className="absolute -inset-0.5 rounded-lg bg-gradient-to-r from-cyan-500/20 to-blue-500/20 opacity-0 group-hover:opacity-100 blur-sm transition-opacity duration-300" />
+              <div className="relative px-4 py-2 rounded-lg bg-white/[0.04] border border-white/[0.06] text-white/50 hover:text-white/80 transition-colors">
+                Choose Image
+              </div>
             </button>
             <button
               onClick={pasteFromClipboard}
-              className="px-3 py-1.5 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-neutral-300 transition-colors"
+              className="group relative"
             >
-              Paste
+              <div className="absolute -inset-0.5 rounded-lg bg-gradient-to-r from-violet-500/20 to-cyan-500/20 opacity-0 group-hover:opacity-100 blur-sm transition-opacity duration-300" />
+              <div className="relative px-4 py-2 rounded-lg bg-white/[0.04] border border-white/[0.06] text-white/50 hover:text-white/80 transition-colors">
+                Paste
+              </div>
             </button>
           </div>
         )}
       </div>
 
-      {toast && (
-        <div className="fixed bottom-20 left-1/2 -translate-x-1/2 bg-neutral-800 text-white text-xs px-4 py-2 rounded-lg shadow-lg z-50 animate-pulse">
-          {toast}
-        </div>
-      )}
+      <AnimatePresence>
+        {toast && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className="fixed bottom-20 left-1/2 -translate-x-1/2 bg-white/10 backdrop-blur-xl border border-white/[0.06] text-white/80 text-xs px-5 py-2.5 rounded-xl shadow-2xl z-50"
+          >
+            {toast}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }
