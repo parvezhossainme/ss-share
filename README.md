@@ -1,36 +1,42 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# ss-share
 
-## Getting Started
+Paste an image, get a short shareable URL. Like a pastebin for images.
 
-First, run the development server:
+Built with **Next.js 16** (App Router), **Tailwind v4**, **Neon** (Postgres), and **Vercel Blob** / **ImgBB**.
+
+## How it works
+
+1. Go to the home page, type a slug (e.g. `my-pics`), optionally paste an image.
+2. Share `https://ss-share.vercel.app/my-pics` with anyone.
+3. Anyone with the link can view, copy, or download images.
+4. Anyone who pastes an image in that room gets a delete token (stored in browser memory) to delete their own uploads.
+
+## Features
+
+- Ctrl+V to paste images anywhere on the page
+- Multiple images per slug (chat-thread style)
+- Expiration: 1d / 3d / 5d / 7d / 30d / Never (default: 5d)
+- Lazy expiration cleanup on read
+- Copy image to clipboard / Download
+- Delete your own uploads
+
+## Environment variables
+
+| Variable | Required | Description |
+|---|---|---|
+| `DATABASE_URL` | No* | Neon Postgres connection string |
+| `BLOB_READ_WRITE_TOKEN` | No* | Vercel Blob token |
+| `IMGBB_API_KEY` | No* | ImgBB API key (free fallback) |
+
+\* Without `DATABASE_URL`, data is stored in memory (lost on restart).  
+\* Without `BLOB_READ_WRITE_TOKEN`, falls back to ImgBB.  
+\* Without `IMGBB_API_KEY`, uploads will fail.
+
+## Local dev
 
 ```bash
+cp .env.example .env
+# fill in your keys
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
-
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
-
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
