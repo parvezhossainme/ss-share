@@ -17,6 +17,7 @@ export default function SlugPage() {
   const [loading, setLoading] = useState(true)
   const [uploading, setUploading] = useState(false)
   const [deleteTokens, setDeleteTokens] = useState<Record<number, string>>({})
+  const [toast, setToast] = useState("")
   const bottomRef = useRef<HTMLDivElement>(null)
   const fileRef = useRef<HTMLInputElement>(null)
 
@@ -106,10 +107,33 @@ export default function SlugPage() {
     }
   }
 
+  function showToast(msg: string) {
+    setToast(msg)
+    setTimeout(() => setToast(""), 2000)
+  }
+
   function handleFileChange(e: FormEvent<HTMLInputElement>) {
     const f = e.currentTarget.files?.[0]
     if (f) uploadFile(f)
     e.currentTarget.value = ""
+  }
+
+  async function pasteFromClipboard() {
+    try {
+      const items = await navigator.clipboard.read()
+      for (const item of items) {
+        for (const type of item.types) {
+          if (type.startsWith("image/")) {
+            const blob = await item.getType(type)
+            await uploadFile(new File([blob], "clipboard.png", { type }))
+            return
+          }
+        }
+      }
+      showToast("No image in clipboard")
+    } catch {
+      showToast("Could not read clipboard")
+    }
   }
 
   async function handleCopyImage(url: string) {
@@ -117,8 +141,9 @@ export default function SlugPage() {
       const res = await fetch(url)
       const blob = await res.blob()
       await navigator.clipboard.write([new ClipboardItem({ [blob.type]: blob })])
+      showToast("Copied!")
     } catch {
-      // ignore
+      showToast("Copy failed")
     }
   }
 
@@ -200,11 +225,7 @@ export default function SlugPage() {
         {uploading ? (
           <div className="text-center text-xs text-neutral-500 py-2">Uploading...</div>
         ) : (
-          <div
-            onPaste={handlePaste}
-            onClick={() => fileRef.current?.click()}
-            className="text-center text-xs text-neutral-500 py-2 rounded-lg hover:bg-neutral-900 transition-colors cursor-pointer"
-          >
+          <div onPaste={handlePaste} className="flex items-center justify-center gap-2 text-xs">
             <input
               ref={fileRef}
               type="file"
@@ -212,10 +233,27 @@ export default function SlugPage() {
               className="hidden"
               onChange={handleFileChange}
             />
-            Tap to choose image · Ctrl+V to paste
+            <button
+              onClick={() => fileRef.current?.click()}
+              className="px-3 py-1.5 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-neutral-300 transition-colors"
+            >
+              Choose Image
+            </button>
+            <button
+              onClick={pasteFromClipboard}
+              className="px-3 py-1.5 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-neutral-300 transition-colors"
+            >
+              Paste
+            </button>
           </div>
         )}
       </div>
+
+      {toast && (
+        <div className="fixed bottom-20 left-1/2 -translate-x-1/2 bg-neutral-800 text-white text-xs px-4 py-2 rounded-lg shadow-lg z-50 animate-pulse">
+          {toast}
+        </div>
+      )}
     </div>
   )
 }
