@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState, useRef, useCallback } from "react"
+import { useEffect, useState, useRef, useCallback, type FormEvent } from "react"
 import { useParams } from "next/navigation"
 
 interface ImageData {
@@ -18,6 +18,7 @@ export default function SlugPage() {
   const [uploading, setUploading] = useState(false)
   const [deleteTokens, setDeleteTokens] = useState<Record<number, string>>({})
   const bottomRef = useRef<HTMLDivElement>(null)
+  const fileRef = useRef<HTMLInputElement>(null)
 
   const fetchImages = useCallback(async () => {
     try {
@@ -103,6 +104,12 @@ export default function SlugPage() {
     } catch {
       // ignore
     }
+  }
+
+  function handleFileChange(e: FormEvent<HTMLInputElement>) {
+    const f = e.currentTarget.files?.[0]
+    if (f) uploadFile(f)
+    e.currentTarget.value = ""
   }
 
   async function handleCopyImage(url: string) {
@@ -195,9 +202,17 @@ export default function SlugPage() {
         ) : (
           <div
             onPaste={handlePaste}
+            onClick={() => fileRef.current?.click()}
             className="text-center text-xs text-neutral-500 py-2 rounded-lg hover:bg-neutral-900 transition-colors cursor-pointer"
           >
-            Ctrl+V to paste
+            <input
+              ref={fileRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={handleFileChange}
+            />
+            Tap to choose image · Ctrl+V to paste
           </div>
         )}
       </div>
